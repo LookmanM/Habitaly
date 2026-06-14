@@ -22,6 +22,6 @@ const styles = StyleSheet.create({
   },
   fill: {
     height: 3,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.accent,
   },
 });

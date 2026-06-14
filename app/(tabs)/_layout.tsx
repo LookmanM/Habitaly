@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
   },
   tabActive: {
-    color: Colors.black,
+    color: Colors.accent,
   },
   tabInactive: {
     color: Colors.textSecondary,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,

@@ -9,6 +9,10 @@ export const Colors = {
   black:           '#0A0A0A',
   white:           '#FFFFFF',
 
+  // Brand accent
+  accent:          '#E07A3A',
+  accentSurface:   '#FEF4EE',
+
   // Status colors — use sparingly
   emergency: { text: '#C1272D', background: '#FCEEEE' },
   notified:  { text: '#1B6CA8', background: '#EAF3FC' },

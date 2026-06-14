@@ -6,6 +6,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
 import { Colors } from '@/constants/colors';
 import { Fonts, FontSizes } from '@/constants/typography';
 import { Button } from '@/components/ui/Button';
@@ -19,32 +20,10 @@ function formatPhone(raw: string) {
 
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
-
-  const [email, setEmail] = useState('');
-  const [emailLoading, setEmailLoading] = useState(false);
-
+  const { setGuest } = useAuth();
   const [phone, setPhone] = useState('');
   const [phoneLoading, setPhoneLoading] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
-
-  async function sendEmailOtp() {
-    if (!email.trim()) return;
-    setError(null);
-    setEmailLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { shouldCreateUser: true },
-      });
-      if (error) throw error;
-      router.push({ pathname: '/(auth)/verify-otp', params: { contact: email.trim(), type: 'email' } });
-    } catch (e: any) {
-      setError(e.message ?? 'Something went wrong.');
-    } finally {
-      setEmailLoading(false);
-    }
-  }
 
   async function sendPhoneOtp() {
     const digits = phone.replace(/\D/g, '');
@@ -63,7 +42,12 @@ export default function SignInScreen() {
       if (error) throw error;
       router.push({ pathname: '/(auth)/verify-otp', params: { contact: e164, type: 'sms' } });
     } catch (e: any) {
-      setError(e.message ?? 'Something went wrong.');
+      const msg = e.message ?? '';
+      if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network')) {
+        setError('Network error — check your connection.');
+      } else {
+        setError(msg || 'Something went wrong.');
+      }
     } finally {
       setPhoneLoading(false);
     }
@@ -76,52 +60,12 @@ export default function SignInScreen() {
         contentContainerStyle={{ paddingTop: insets.top + 48, paddingBottom: insets.bottom + 40 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Logo */}
         <View style={styles.header}>
           <Text style={styles.logo}>Habitaly</Text>
           <Text style={styles.tagline}>Know your rights. Document everything.</Text>
         </View>
 
-        {/* Apple / Google — not yet enabled */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.providerBtn} disabled activeOpacity={1}>
-            <Text style={styles.providerText}>Continue with Apple</Text>
-          </TouchableOpacity>
-          <View style={{ height: 10 }} />
-          <TouchableOpacity style={styles.providerBtn} disabled activeOpacity={1}>
-            <Text style={styles.providerText}>Continue with Google</Text>
-          </TouchableOpacity>
-          <Text style={styles.comingSoon}>Apple & Google coming soon</Text>
-        </View>
-
-        <Divider />
-
-        {/* Email */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor={Colors.textSecondary}
-            value={email}
-            onChangeText={t => { setEmail(t); setError(null); }}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-            returnKeyType="done"
-            onSubmitEditing={sendEmailOtp}
-          />
-          <Button
-            label="Continue with Email"
-            onPress={sendEmailOtp}
-            loading={emailLoading}
-            disabled={!email.trim()}
-          />
-        </View>
-
-        <Divider />
-
-        {/* Phone */}
+        {/* Phone — inline input */}
         <View style={styles.section}>
           <Text style={styles.label}>Phone (US)</Text>
           <View style={styles.phoneRow}>
@@ -148,6 +92,21 @@ export default function SignInScreen() {
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <Divider />
+
+        {/* Email — button only, takes you to its own screen */}
+        <View style={styles.section}>
+          <Button
+            label="Continue with Email"
+            onPress={() => router.push('/(auth)/sign-in-email')}
+            variant="secondary"
+          />
+        </View>
+
+        <TouchableOpacity onPress={() => { setGuest(true); router.replace('/(tabs)'); }} style={styles.skipBtn}>
+          <Text style={styles.skipText}>Skip for now</Text>
+        </TouchableOpacity>
 
         <Text style={styles.disclaimer}>
           Habitaly is not a law firm and does not provide legal advice.
@@ -233,28 +192,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 0,
   },
-  providerBtn: {
-    height: 52,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.45,
-  },
-  providerText: {
-    fontSize: FontSizes.base,
-    fontFamily: Fonts.semiBold,
-    color: Colors.textSecondary,
-  },
-  comingSoon: {
-    textAlign: 'center',
-    fontSize: FontSizes.xs,
-    fontFamily: Fonts.regular,
-    color: Colors.textSecondary,
-    marginTop: 10,
-  },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -277,8 +214,18 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: Colors.emergency.text,
     paddingHorizontal: 24,
-    marginTop: 16,
+    marginTop: 12,
     textAlign: 'center',
+  },
+  skipBtn: {
+    alignItems: 'center',
+    marginTop: 28,
+  },
+  skipText: {
+    fontSize: FontSizes.sm,
+    fontFamily: Fonts.regular,
+    color: Colors.textSecondary,
+    textDecorationLine: 'underline',
   },
   disclaimer: {
     fontSize: FontSizes.xs,
