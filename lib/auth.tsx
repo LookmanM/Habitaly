@@ -2,13 +2,14 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
-type AuthCtx = { session: Session | null; loading: boolean };
+type AuthCtx = { session: Session | null; loading: boolean; guest: boolean; setGuest: (v: boolean) => void };
 
-const AuthContext = createContext<AuthCtx>({ session: null, loading: true });
+const AuthContext = createContext<AuthCtx>({ session: null, loading: true, guest: false, setGuest: () => {} });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [guest, setGuest] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, loading }}>
+    <AuthContext.Provider value={{ session, loading, guest, setGuest }}>
       {children}
     </AuthContext.Provider>
   );

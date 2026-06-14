@@ -11,19 +11,19 @@ import {
 import { AuthProvider, useAuth } from '@/lib/auth';
 
 function RootLayoutNav() {
-  const { session, loading } = useAuth();
+  const { session, loading, guest } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
     if (loading) return;
     const inAuth = segments.some((s: string) => s === '(auth)');
-    if (!session && !inAuth) {
+    if (!session && !guest && !inAuth) {
       router.replace('/(auth)/sign-in');
     } else if (session && inAuth) {
       router.replace('/(tabs)');
     }
-  }, [session, loading, segments]);
+  }, [session, loading, guest, segments]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

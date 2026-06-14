@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   primary: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.accent,
   },
   secondary: {
     backgroundColor: Colors.white,
